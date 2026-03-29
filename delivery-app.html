@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>配送管理システム</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+  :root {
+    --bg: #F0F4F8;
+    --white: #FFFFFF;
+    --primary: #1A5CFF;
+    --primary-dark: #0040CC;
+    --success: #00B86B;
+    --warning: #FF8C00;
+    --danger: #FF3B30;
+    --text: #1A1A2E;
+    --text-light: #6B7A8D;
+    --border: #D8E0EB;
+    --shadow: 0 4px 20px rgba(26,92,255,0.10);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { overscroll-behavior: none; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    background: var(--primary);
+    color: white;
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,92,255,0.30);
+  }
+  header h1 { font-size: 20px; font-weight: 900; letter-spacing: 0.02em; }
+  header p { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title span { font-size: 16px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  input[type="text"] {
+    width: 100%;
+    height: 54px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 17px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 500;
+    padding: 0 16px;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,92,255,0.12);
+    background: white;
+  }
+
+  .status-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .status-btn {
+    height: 60px;
+    border: 2.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text-light);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.18s;
+  }
+  .status-btn .icon { font-size: 22px; }
+  .status-btn:active { transform: scale(0.96); }
+  .status-btn.sel-kanryo { border-color: var(--success); background: #E6FAF2; color: var(--success); }
+  .status-btn.sel-fuzai { border-color: var(--warning); background: #FFF4E0; color: var(--warning); }
+  .status-btn.sel-mochi { border-color: var(--danger); background: #FFF0EF; color: var(--danger); }
+
+  .photo-area {
+    border: 2.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-area:active { background: #e8edf5; }
+  .photo-area.has-photo { border-style: solid; border-color: var(--primary); }
+  .photo-area .icon { font-size: 36px; }
+  .photo-area p { font-size: 14px; color: var(--text-light); font-weight: 500; }
+  .photo-area small { font-size: 12px; color: var(--text-light); }
+  #photoInput { display: none; }
+  #photoPreview { width: 100%; border-radius: 10px; display: none; object-fit: cover; max-height: 200px; }
+
+  /* サインカード */
+  .sign-card {
+    cursor: pointer;
+    user-select: none;
+  }
+  .sign-card:active { opacity: 0.85; }
+  .sign-preview-box {
+    border: 2.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .sign-preview-box.done { border-style: solid; border-color: var(--success); background: #E6FAF2; }
+  .sign-preview-box img { max-height: 120px; max-width: 100%; border-radius: 8px; }
+
+  /* 全画面サインモーダル */
+  #signModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: #fff;
+    flex-direction: column;
+  }
+  #signModal.open { display: flex; }
+
+  /* 横画面対応：ヘッダーとフッターを小さく */
+  .sign-modal-header {
+    background: var(--primary);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sign-modal-header h2 { color: white; font-size: 16px; font-weight: 900; }
+  .sign-modal-header button {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  #signCanvas {
+    flex: 1;
+    display: block;
+    width: 100%;
+    touch-action: none;
+    cursor: crosshair;
+    background: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ロック時のオーバーレイ */
+  #signLockOverlay {
+    display: none;
+    position: absolute;
+    inset: 52px 0 72px 0;
+    z-index: 10;
+    background: transparent;
+  }
+
+  .sign-modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .btn-cancel {
+    flex: 1;
+    height: 50px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text-light);
+    cursor: pointer;
+  }
+  .btn-done {
+    flex: 2;
+    height: 50px;
+    background: var(--success);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 17px;
+    font-weight: 900;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: white;
+    cursor: pointer;
+  }
+
+  .btn-submit {
+    width: 100%;
+    height: 64px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 18px;
+    font-weight: 900;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 24px rgba(26,92,255,0.35);
+    transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+  }
+  .btn-submit:active { background: var(--primary-dark); transform: scale(0.98); }
+
+  .sending-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 600; display: none; align-items: center;
+    justify-content: center; flex-direction: column; gap: 16px;
+  }
+  .sending-overlay.show { display: flex; }
+  .spinner {
+    width: 52px; height: 52px;
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-overlay p { color: white; font-size: 16px; font-weight: 700; }
+
+  .success-overlay {
+    position: fixed; inset: 0; background: var(--success);
+    z-index: 700; display: none; align-items: center;
+    justify-content: center; flex-direction: column; gap: 16px;
+  }
+  .success-overlay.show { display: flex; }
+  .success-icon { font-size: 80px; }
+  .success-overlay h2 { color: white; font-size: 26px; font-weight: 900; }
+  .success-overlay p { color: rgba(255,255,255,0.85); font-size: 15px; }
+  .btn-next {
+    margin-top: 16px; background: white; color: var(--success);
+    border: none; border-radius: var(--radius); height: 56px;
+    width: 200px; font-size: 16px; font-weight: 900;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+  }
+
+  .error-msg { color: var(--danger); font-size: 12px; font-weight: 700; margin-top: 4px; display: none; }
+  .error-msg.show { display: block; }
+  input.error { border-color: var(--danger); }
+
+  .optional {
+    display: inline-block; background: #6B7A8D; color: white;
+    font-size: 10px; font-weight: 700; padding: 1px 5px;
+    border-radius: 4px; margin-left: 4px; vertical-align: middle;
+  }
+  .required {
+    display: inline-block; background: var(--danger); color: white;
+    font-size: 10px; font-weight: 700; padding: 1px 5px;
+    border-radius: 4px; margin-left: 4px; vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📦 配送管理システム</h1>
+  <p>配達完了記録・受取サイン</p>
+</header>
+
+<div class="container">
+
+  <!-- 基本情報 -->
+  <div class="card">
+    <div class="card-title"><span>📋</span> 基本情報</div>
+    <label>伝票番号 <span class="optional">任意</span></label>
+    <input type="text" id="trackingNo" placeholder="例：TRK-2024-001" autocomplete="off">
+    <div class="error-msg" id="err-tracking"></div>
+    <label>配達先名 <span class="optional">任意</span></label>
+    <input type="text" id="receiverName" placeholder="例：山田 太郎" autocomplete="off">
+    <div class="error-msg" id="err-name"></div>
+  </div>
+
+  <!-- 配達状況 -->
+  <div class="card">
+    <div class="card-title"><span>🚚</span> 配達状況 <span class="required">必須</span></div>
+    <div class="status-group">
+      <button class="status-btn" onclick="selectStatus('完了', this, 'sel-kanryo')">
+        <span class="icon">✅</span>完了
+      </button>
+      <button class="status-btn" onclick="selectStatus('不在', this, 'sel-fuzai')">
+        <span class="icon">🚪</span>不在
+      </button>
+      <button class="status-btn" onclick="selectStatus('持ち戻り', this, 'sel-mochi')">
+        <span class="icon">↩️</span>持ち戻り
+      </button>
+    </div>
+    <div class="error-msg" id="err-status">配達状況を選択してください</div>
+  </div>
+
+  <!-- 写真 -->
+  <div class="card">
+    <div class="card-title"><span>📷</span> 配達写真</div>
+    <div class="photo-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+      <span class="icon" id="photoIcon">📸</span>
+      <p id="photoText">タップして写真を撮る・選ぶ</p>
+      <small id="photoSub">カメラで撮影、またはアルバムから選択</small>
+      <img id="photoPreview" src="" alt="写真プレビュー">
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+  </div>
+
+  <!-- サイン -->
+  <div class="card sign-card" onclick="openSignModal()">
+    <div class="card-title"><span>✍️</span> 受取人サイン</div>
+    <div class="sign-preview-box" id="signPreviewBox">
+      <div id="signHint" style="text-align:center;color:var(--text-light);">
+        <div style="font-size:34px;">✍️</div>
+        <div style="font-size:14px;font-weight:600;margin-top:4px;">タップしてサインを受け取る</div>
+      </div>
+      <img id="signPreviewImg" src="" alt="サインプレビュー" style="display:none;">
+    </div>
+    <div id="signDoneTag" style="display:none;margin-top:8px;font-size:12px;font-weight:700;color:var(--success);">
+      ✅ サイン完了（タップで修正可能）
+    </div>
+  </div>
+
+  <input type="hidden" id="gasUrl" value="https://script.google.com/macros/s/AKfycbz8DY_fEsoF0Qk8rKeeCHp4gFAwV5ZGt2LFsy0_pkUfP0tFkMKJfi8W1rh2jRshExTnrQ/exec">
+  <input type="hidden" id="sheetId" value="1z1SiLCPMGbV5dqyncmy82TR7k-kgx9pJLPCbzAvc-mI">
+
+  <button class="btn-submit" onclick="submitForm()">
+    <span style="font-size:22px;">📤</span> 送信する
+  </button>
+
+</div>
+
+<!-- 全画面サインモーダル -->
+<div id="signModal">
+  <div class="sign-modal-header">
+    <h2>✍️ サインしてください</h2>
+    <button onclick="clearSignCanvas()">クリア</button>
+  </div>
+  <canvas id="signCanvas"></canvas>
+  <div id="signLockOverlay"></div>
+  <div class="sign-modal-footer">
+    <button class="btn-cancel" onclick="closeSignModal()">キャンセル</button>
+    <button class="btn-done" onclick="completeSign()">✅ 完了</button>
+  </div>
+</div>
+
+<!-- ローディング -->
+<div class="sending-overlay" id="sendingOverlay">
+  <div class="spinner"></div>
+  <p>送信中...</p>
+</div>
+
+<!-- 成功 -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✅</div>
+  <h2>送信完了！</h2>
+  <p id="successDetail">スプレッドシートに記録しました</p>
+  <button class="btn-next" onclick="resetForm()">次の配達へ →</button>
+</div>
+
+<script>
+// ======== 状態管理 ========
+let selectedStatus = '';
+let photoData = '';
+let signHasData = false;
+let savedSignData = null;
+let signLocked = false;
+
+// ======== 配達状況 ========
+function selectStatus(status, btn, cls) {
+  selectedStatus = status;
+  document.querySelectorAll('.status-btn').forEach(b => b.className = 'status-btn');
+  btn.classList.add(cls);
+  document.getElementById('err-status').classList.remove('show');
+}
+
+// ======== 写真 ========
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    photoData = ev.target.result;
+    const preview = document.getElementById('photoPreview');
+    preview.src = photoData;
+    preview.style.display = 'block';
+    document.getElementById('photoIcon').style.display = 'none';
+    document.getElementById('photoText').style.display = 'none';
+    document.getElementById('photoSub').style.display = 'none';
+    document.getElementById('photoArea').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ======== 全画面サイン ========
+let signCanvas, signCtx, drawing = false, lastX = 0, lastY = 0;
+let eventsAttached = false;
+
+function openSignModal() {
+  const modal = document.getElementById('signModal');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.touchAction = 'none';
+
+  // 横画面を促す
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+
+  signCanvas = document.getElementById('signCanvas');
+  signCtx = signCanvas.getContext('2d');
+
+  // サイズをリセットして取得
+  signCanvas.width = 0;
+  signCanvas.height = 0;
+
+  requestAnimationFrame(() => {
+    const ratio = window.devicePixelRatio || 1;
+    const w = signCanvas.offsetWidth;
+    const h = signCanvas.offsetHeight;
+    signCanvas.width = w * ratio;
+    signCanvas.height = h * ratio;
+    signCtx.scale(ratio, ratio);
+    signCtx.strokeStyle = '#1A1A2E';
+    signCtx.lineWidth = 3;
+    signCtx.lineCap = 'round';
+    signCtx.lineJoin = 'round';
+
+    // 既存サインを復元
+    if (signHasData && savedSignData) {
+      const img = new Image();
+      img.onload = () => signCtx.drawImage(img, 0, 0, w, h);
+      img.src = savedSignData;
+    }
+
+    // ロック状態の復元
+    signLocked = false;
+    document.getElementById('signLockOverlay').style.display = 'none';
+
+    // イベント登録（重複防止）
+    if (!eventsAttached) {
+      signCanvas.addEventListener('mousedown', startDraw);
+      signCanvas.addEventListener('touchstart', startDraw, { passive: false });
+      signCanvas.addEventListener('mousemove', moveDraw);
+      signCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+      signCanvas.addEventListener('mouseup', endDraw);
+      signCanvas.addEventListener('touchend', endDraw, { passive: false });
+      eventsAttached = true;
+    }
+  });
+}
+
+function closeSignModal() {
+  document.getElementById('signModal').classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.touchAction = '';
+  if (screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
+  }
+}
+
+function getPos(e) {
+  const rect = signCanvas.getBoundingClientRect();
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+  }
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function startDraw(e) {
+  if (signLocked) return;
+  e.preventDefault();
+  drawing = true;
+  const p = getPos(e);
+  lastX = p.x; lastY = p.y;
+}
+
+function moveDraw(e) {
+  if (!drawing || signLocked) return;
+  e.preventDefault();
+  const p = getPos(e);
+  signCtx.beginPath();
+  signCtx.moveTo(lastX, lastY);
+  signCtx.lineTo(p.x, p.y);
+  signCtx.stroke();
+  lastX = p.x; lastY = p.y;
+  signHasData = true;
+}
+
+function endDraw() {
+  drawing = false;
+}
+
+function clearSignCanvas() {
+  if (!signCtx || !signCanvas) return;
+  const ratio = window.devicePixelRatio || 1;
+  signCtx.clearRect(0, 0, signCanvas.width / ratio, signCanvas.height / ratio);
+  signHasData = false;
+  signLocked = false;
+  document.getElementById('signLockOverlay').style.display = 'none';
+}
+
+function completeSign() {
+  if (!signHasData) {
+    alert('サインがまだありません');
+    return;
+  }
+  savedSignData = signCanvas.toDataURL('image/png');
+  signLocked = true;
+  document.getElementById('signLockOverlay').style.display = 'block';
+
+  // メイン画面のプレビュー更新
+  document.getElementById('signPreviewImg').src = savedSignData;
+  document.getElementById('signPreviewImg').style.display = 'block';
+  document.getElementById('signHint').style.display = 'none';
+  document.getElementById('signPreviewBox').classList.add('done');
+  document.getElementById('signDoneTag').style.display = 'block';
+
+  closeSignModal();
+}
+
+// ======== バリデーション ========
+function validate() {
+  if (!selectedStatus) {
+    document.getElementById('err-status').classList.add('show');
+    return false;
+  }
+  document.getElementById('err-status').classList.remove('show');
+  return true;
+}
+
+// ======== 送信 ========
+async function submitForm() {
+  if (!validate()) {
+    document.getElementById('err-status').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  const gasUrl = document.getElementById('gasUrl').value.trim();
+  const payload = {
+    trackingNo: document.getElementById('trackingNo').value.trim(),
+    receiverName: document.getElementById('receiverName').value.trim(),
+    status: selectedStatus,
+    photo: photoData || null,
+    sign: savedSignData || null,
+    timestamp: new Date().toISOString()
+  };
+
+  document.getElementById('sendingOverlay').classList.add('show');
+
+  try {
+    if (gasUrl.startsWith('https://script.google.com')) {
+      await fetch(gasUrl, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'text/plain' }
+      });
+      document.getElementById('successDetail').textContent = 'Googleスプレッドシートに記録しました ✓';
+    } else {
+      await new Promise(r => setTimeout(r, 1000));
+      document.getElementById('successDetail').textContent = 'デモ保存完了';
+    }
+    document.getElementById('sendingOverlay').classList.remove('show');
+    document.getElementById('successOverlay').classList.add('show');
+  } catch (err) {
+    document.getElementById('sendingOverlay').classList.remove('show');
+    alert('送信に失敗しました。\n' + err.message);
+  }
+}
+
+// ======== リセット ========
+function resetForm() {
+  document.getElementById('successOverlay').classList.remove('show');
+  document.getElementById('trackingNo').value = '';
+  document.getElementById('receiverName').value = '';
+  selectedStatus = '';
+  document.querySelectorAll('.status-btn').forEach(b => b.className = 'status-btn');
+  photoData = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoIcon').style.display = '';
+  document.getElementById('photoText').style.display = '';
+  document.getElementById('photoSub').style.display = '';
+  document.getElementById('photoArea').classList.remove('has-photo');
+  document.getElementById('photoInput').value = '';
+  signHasData = false;
+  savedSignData = null;
+  signLocked = false;
+  document.getElementById('signPreviewImg').style.display = 'none';
+  document.getElementById('signPreviewImg').src = '';
+  document.getElementById('signHint').style.display = 'flex';
+  document.getElementById('signPreviewBox').classList.remove('done');
+  document.getElementById('signDoneTag').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
